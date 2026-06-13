@@ -1,0 +1,36 @@
+---
+- name: Disk Usage Monitor
+  hosts: localhost
+  tasks:
+
+    - name: Check disk usage
+      shell: df / | tail -1 | awk '{print $5}' | tr -d '%'
+      register: disk_usage
+
+    - name: Show disk usage
+      debug:
+        msg: "Current disk usage is {{ disk_usage.stdout }}%"
+
+    - name: Alert if above threshold
+      debug:
+        msg: "ALERT! Disk usage is above 10%! Take action!"
+      when: disk_usage.stdout | int > 10
+
+    - name: Clean up old log files
+      shell: find /var/log -type f -mtime +30 -delete
+      become: yes
+      when: disk_usage.stdout | int > 10
+
+    - name: Clean up journal logs older than 30 days
+      shell: journalctl --vacuum-time=30d
+      become: yes
+      when: disk_usage.stdout | int > 10
+
+    - name: Send Slack alert
+      uri:
+        url: "{{ slack_webhook_url }}"
+        method: POST
+        body_format: json
+        body:
+          text: "ALERT! Disk usage is above threshold on {{ inventory_hostname }}! Cleanup has been triggered."
+      when: disk_usage.stdout | int > 10

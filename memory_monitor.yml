@@ -1,0 +1,32 @@
+---
+- name: Memory Usage Monitor
+  hosts: localhost
+  tasks:
+
+    - name: Check memory usage
+      shell: free | awk '/Mem/{printf("%.0f"), $3/$2*100}'
+      register: mem_usage
+
+    - name: Show memory usage
+      debug:
+        msg: "Current memory usage is {{ mem_usage.stdout }}%"
+
+    - name: Alert if above threshold
+      debug:
+        msg: "ALERT! Memory usage is above 20%! Take action!"
+      when: mem_usage.stdout | float > 20
+
+    - name: Clear memory cache
+      shell: sync; echo 3 > /proc/sys/vm/drop_caches
+      become: yes
+      ignore_errors: yes
+      when: mem_usage.stdout | float > 20
+
+    - name: Send Slack alert
+      uri:
+        url: "{{ slack_webhook_url }}"
+        method: POST
+        body_format: json
+        body:
+          text: "ALERT! Memory usage is above threshold on {{ inventory_hostname }}! Cleanup has been triggered."
+      when: mem_usage.stdout | float > 20

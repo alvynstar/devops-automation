@@ -1,0 +1,39 @@
+---
+- name: CPU Usage Monitor
+  hosts: localhost
+  tasks:
+
+    - name: Check CPU usage
+      shell: top -bn1 | grep "Cpu(s)" | awk '{print $2}' | tr -d '%us,'
+      register: cpu_usage
+
+    - name: Show CPU usage
+      debug:
+        msg: "Current CPU usage is {{ cpu_usage.stdout }}%"
+
+    - name: Alert if above threshold
+      debug:
+        msg: "ALERT! CPU usage is above 5%! Take action!"
+      when: cpu_usage.stdout | float > 5
+
+    - name: Find top process by CPU usage
+      shell: ps aux --sort=-%cpu | awk 'NR==2{print $2}'
+      register: top_process
+      become: yes
+      when: cpu_usage.stdout | float > 5
+
+    - name: Kill process consuming high CPU
+      shell: kill -9 {{ top_process.stdout }}
+      become: yes
+      ignore_errors: yes
+      when: cpu_usage.stdout | float > 5
+
+
+    - name: Send Slack alert
+      uri:
+        url: "{{ slack_webhook_url }}"
+        method: POST
+        body_format: json
+        body:
+          text: "ALERT! CPU usage is above threshold on {{ inventory_hostname }}! Cleanup has been triggered."
+      when: cpu_usage.stdout | float > 5
