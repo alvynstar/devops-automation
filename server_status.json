@@ -1,0 +1,7 @@
+{
+  "server": "web-server-01",
+  "disk_usage": 22,
+  "cpu_usage": 15,
+  "memory_usage": 45,
+  "status": "healthy"
+}
