@@ -10,10 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Notify Slack
-        uses: slackapi/slack-github-action@v1
+        uses: slackapi/slack-github-action@v2.0.0
         with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
           payload: |
             {
-              "text": "DevOps Pipeline completed: ${{ github.event.workflow_run.conclusion }}"
+              "text": "DevOps Pipeline *${{ github.event.workflow_run.conclusion }}* — <${{ github.event.workflow_run.html_url }}|View run>"
             }
