@@ -1,0 +1,17 @@
+name: DevOps Pipeline
+
+on: [push]  # Run when code is pushed
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Run Python scripts
+        run: python3 exercise5.py
+      
+      - name: Validate Ansible playbooks
+        run: ansible-playbook --syntax-check disk_monitor.yml
+
