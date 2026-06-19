@@ -1,6 +1,6 @@
 name: DevOps Pipeline
 
-on: [push]  # Run when code is pushed
+on: [push]
 
 jobs:
   validate:
@@ -9,9 +9,18 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      
+      - name: Install dependencies
+        run: pip install requests
+      
       - name: Run Python scripts
+        env:
+          SLACK_WEBHOOK_URL: "https://hooks.slack.com/placeholder"
         run: python3 exercise5.py
       
       - name: Validate Ansible playbooks
         run: ansible-playbook --syntax-check disk_monitor.yml
-
