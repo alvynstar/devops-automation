@@ -1,6 +1,8 @@
 ---
 - name: Disk Usage Monitor
   hosts: localhost
+  vars_files:
+    - vars.yml
   tasks:
 
     - name: Check disk usage
